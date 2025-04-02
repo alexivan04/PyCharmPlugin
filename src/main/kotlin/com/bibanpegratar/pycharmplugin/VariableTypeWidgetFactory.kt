@@ -2,18 +2,23 @@ package com.bibanpegratar.pycharmplugin
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.StatusBarWidget
-import com.intellij.openapi.wm.StatusBarWidgetFactory
+import com.intellij.openapi.wm.impl.status.widget.StatusBarEditorBasedWidgetFactory
 
-open class VariableTypeWidgetFactory : StatusBarWidgetFactory {
-    override fun getId(): String {
-        return "VariableTypeWidget"  // Unique ID for your widget
+open class VariableTypeWidgetFactory : StatusBarEditorBasedWidgetFactory() {
+    override fun getDisplayName(): String {
+        return "PyCharm Variable Type"
     }
 
-    override fun getDisplayName(): String {
+    override fun getId(): String {
         return "VariableTypeWidget"
     }
 
-    override fun createWidget(project: Project): VariableTypeWidget {
-        return VariableTypeWidget()  // Create an instance of your custom widget
+    override fun createWidget(project: Project): StatusBarWidget {
+        return VariableTypeWidget(project)
     }
+
+    override fun isAvailable(project: Project): Boolean {
+        return true
+    }
+
 }

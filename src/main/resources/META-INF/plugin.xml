@@ -28,17 +28,19 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
+        <statusBarWidgetFactory id="VariableTypeWidget"
+                                implementation="com.bibanpegratar.pycharmplugin.VariableTypeWidgetFactory"/>
 
     </extensions>
 
-    <actions>
-        <group id="PyCharmPlugin.MainMenuGroup" text="HelloAction" description="Mama">
-            <!-- THIS LINE MUST BE CORRECT -->
-            <action class="com.bibanpegratar.pycharmplugin.HelloAction"
-                    id="HelloAction"
-                    text="Say Hello"/>
-            <add-to-group group-id="ToolsMenu" anchor="first"/>
-        </group>
-    </actions>
+<!--    <actions>-->
+<!--        <group id="PyCharmPlugin.MainMenuGroup" text="HelloAction" description="Mama">-->
+<!--            &lt;!&ndash; THIS LINE MUST BE CORRECT &ndash;&gt;-->
+<!--            <action class="com.bibanpegratar.pycharmplugin.HelloAction"-->
+<!--                    id="HelloAction"-->
+<!--                    text="Say Hello"/>-->
+<!--            <add-to-group group-id="" anchor="first"/>-->
+<!--        </group>-->
+<!--    </actions>-->
 
 </idea-plugin>
