@@ -10,7 +10,7 @@ import com.intellij.openapi.wm.StatusBar
 import com.intellij.openapi.wm.StatusBarWidget
 import com.intellij.openapi.wm.impl.status.EditorBasedWidget
 import com.intellij.util.Consumer
-import com.jetbrains.python.psi.PyReferenceExpression
+import com.jetbrains.python.psi.*
 import com.jetbrains.python.psi.types.TypeEvalContext
 import java.awt.event.MouseEvent
 
@@ -91,26 +91,54 @@ class VariableTypeWidget(project: Project) : EditorBasedWidget(project), StatusB
             return
         }
 
+        // 1. Check if the caret is on a variable REFERENCE
         val refExpr = com.intellij.psi.util.PsiTreeUtil.getParentOfType(
-            element,
-            PyReferenceExpression::class.java,
-            false
-        ) ?: run {
-            text = "No variable at caret"
+            element, PyReferenceExpression::class.java, false
+        )
+
+        if (refExpr != null) {
+            val type = TypeEvalContext.codeAnalysis(project, psiFile).getType(refExpr)
+            text = if (type != null) "${refExpr.name}: ${type.name}" else "${refExpr.name}: Unknown type"
             myStatusBar?.updateWidget(ID())
             return
         }
 
-        // create the evaluation context
-        val type = TypeEvalContext.codeAnalysis(project, psiFile).getType(refExpr)
+        // 2. If no reference found, check if the caret is on a variable DECLARATION (assignment target)
+        val targetExpr = com.intellij.psi.util.PsiTreeUtil.getParentOfType(
+            element, PyTargetExpression::class.java, false
+        )
 
-        text = if (type != null) {
-            "${refExpr.name}: ${type.name}"
-        } else {
-            "${refExpr.name}: Unknown type"
+        if (targetExpr != null) {
+            val parent = targetExpr.parent
+            if (parent is PyAssignmentStatement) {
+                val assignedValue = parent.assignedValue
+                if (assignedValue != null) {
+                    text = "${targetExpr.name}: ${getTypeFromExpression(assignedValue)}"
+                } else {
+                    text = "${targetExpr.name}: Unknown type"
+                }
+            } else {
+                text = "${targetExpr.name}: Unknown type"
+            }
+            myStatusBar?.updateWidget(ID())
+            return
         }
 
+        text = "No variable at caret"
         myStatusBar?.updateWidget(ID())
+    }
+
+
+    private fun getTypeFromExpression(expression: PyExpression): String {
+        return when (expression) {
+            is PyStringLiteralExpression -> "str"
+            is PyNumericLiteralExpression -> "num"
+            is PyListLiteralExpression -> "lst"
+            is PyDictLiteralExpression -> "dict"
+            is PyTupleExpression -> "tuple"
+            is PyBoolLiteralExpression -> "bool"
+            else -> "Unknown type"
+        }
     }
 
     override fun dispose() {
