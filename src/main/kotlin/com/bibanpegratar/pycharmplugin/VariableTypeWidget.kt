@@ -55,9 +55,9 @@ class VariableTypeWidget(project: Project) : EditorBasedWidget(project), StatusB
 
     private val caretListener = object : CaretListener {
         override fun caretPositionChanged(event: CaretEvent) {
-            // Throttle updates to avoid performance issues
+            // limit updates
             val now = System.currentTimeMillis()
-            if (now - lastUpdateTime > 100) { // Update at most every 100ms
+            if (now - lastUpdateTime > 100) { // update at most every 100ms
                 lastUpdateTime = now
                 updateText()
             }

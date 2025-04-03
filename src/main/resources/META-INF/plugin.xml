@@ -5,15 +5,15 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
-    <name>PyCharmPlugin</name>
+    <name>Python Variable Type</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor email="bibanpegratar@gmail.com">Mama</vendor>
+    <vendor email="alexivan1304@outlook.com">Alexandru-Marian Ivan</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
-    <description>Test test test test test test test test test test</description>
+    <description>Simple plugin that displays (in StatusBar) a Python variable type, at the position of the caret.</description>
 
 <!--    &lt;!&ndash; Define compatibility for both IntelliJ IDEA and PyCharm &ndash;&gt;-->
     <idea-version since-build="233" until-build="233.*"/>
