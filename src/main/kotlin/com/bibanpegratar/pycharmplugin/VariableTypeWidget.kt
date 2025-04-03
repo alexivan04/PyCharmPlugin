@@ -132,14 +132,46 @@ class VariableTypeWidget(project: Project) : EditorBasedWidget(project), StatusB
     private fun getTypeFromExpression(expression: PyExpression): String {
         return when (expression) {
             is PyStringLiteralExpression -> "str"
-            is PyNumericLiteralExpression -> "num"
-            is PyListLiteralExpression -> "lst"
+            is PyNumericLiteralExpression -> if (expression.text.contains(".")) "float" else "int"
+            is PyBoolLiteralExpression -> "bool"
+            is PyListLiteralExpression -> "list"
             is PyDictLiteralExpression -> "dict"
             is PyTupleExpression -> "tuple"
-            is PyBoolLiteralExpression -> "bool"
+
+            is PyReferenceExpression -> {
+                // Try to resolve the reference
+                val resolved = expression.reference.resolve()
+                if (resolved is PyTargetExpression) {
+                    // Recursively determine the type
+                    val assignedValue = resolved.findAssignedValue()
+                    if (assignedValue != null) {
+                        return getTypeFromExpression(assignedValue)
+                    }
+                }
+                "Unknown type"
+            }
+
+            is PyBinaryExpression -> {
+                val leftType = getTypeFromExpression(expression.leftExpression)
+                val rightType = expression.rightExpression?.let { getTypeFromExpression(it) }
+
+                val operator = expression.psiOperator?.text ?: return "Unknown type"
+
+                return when (operator) {
+                    "+", "-", "*", "//", "/" -> {
+                        if (leftType == "str" || rightType == "str") "str"
+                        else if (leftType == "float" || rightType == "float") "float"
+                        else "int"
+                    }
+                    else -> "Unknown type"
+                }
+            }
+
             else -> "Unknown type"
         }
     }
+
+
 
     override fun dispose() {
         getEditor()?.caretModel?.removeCaretListener(caretListener)
