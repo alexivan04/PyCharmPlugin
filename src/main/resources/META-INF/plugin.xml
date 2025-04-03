@@ -13,7 +13,7 @@
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
-    <description>Tata</description>
+    <description>Test test test test test test test test test test</description>
 
 <!--    &lt;!&ndash; Define compatibility for both IntelliJ IDEA and PyCharm &ndash;&gt;-->
     <idea-version since-build="233" until-build="233.*"/>
@@ -23,6 +23,7 @@
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.python</depends>
     <depends>com.intellij.modules.pycharm</depends>
 
     <!-- Extension points defined by the plugin.
@@ -32,15 +33,5 @@
                                 implementation="com.bibanpegratar.pycharmplugin.VariableTypeWidgetFactory"/>
 
     </extensions>
-
-<!--    <actions>-->
-<!--        <group id="PyCharmPlugin.MainMenuGroup" text="HelloAction" description="Mama">-->
-<!--            &lt;!&ndash; THIS LINE MUST BE CORRECT &ndash;&gt;-->
-<!--            <action class="com.bibanpegratar.pycharmplugin.HelloAction"-->
-<!--                    id="HelloAction"-->
-<!--                    text="Say Hello"/>-->
-<!--            <add-to-group group-id="" anchor="first"/>-->
-<!--        </group>-->
-<!--    </actions>-->
 
 </idea-plugin>

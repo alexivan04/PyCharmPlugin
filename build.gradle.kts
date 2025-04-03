@@ -9,6 +9,7 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    maven { url = uri("https://www.jetbrains.com/intellij-repo") }
 }
 
 // Configure Gradle IntelliJ Plugin
@@ -21,6 +22,7 @@ intellij {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
+//    implementation("com.jetbrains.plugins.python")
 
 }
 
