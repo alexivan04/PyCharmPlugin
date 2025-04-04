@@ -119,18 +119,33 @@ class VariableTypeWidget(project: Project) : EditorBasedWidget(project), StatusB
             is PyBoolLiteralExpression -> "bool"
             is PyListLiteralExpression -> "list"
             is PyDictLiteralExpression -> "dict"
-            is PyTupleExpression -> "tuple"
+            is PyTupleExpression -> "tuple"  // Direct tuple detection (e.g., a = (1, 2, 3))
+            is PySetLiteralExpression -> "set"
 
+            // Handle function definitions
+            is PyFunction -> "function"
+            is PyLambdaExpression -> "lambda function"
+
+            // Detect class attributes
             is PyReferenceExpression -> {
-                // Try to resolve the reference
                 val resolved = expression.reference.resolve()
-                if (resolved is PyTargetExpression) {
-                    // Recursively determine the type
-                    val assignedValue = resolved.findAssignedValue()
-                    if (assignedValue != null) {
-                        return getTypeFromExpression(assignedValue)
-                    }
+
+                if (resolved is PyFunction) {
+                    return "function assignment - ${resolved.name}"
                 }
+
+                // If the reference is inside a class, it's likely a class attribute
+                if (resolved is PyTargetExpression) {
+                    // Check if the variable is part of a class definition
+                    val containingClass = resolved.containingClass
+                    if (containingClass != null) {
+                        return "class attribute"
+                    }
+
+                    // Otherwise, treat it as a regular variable
+                    return getTypeFromExpression(resolved.findAssignedValue() ?: expression)
+                }
+
                 "Unknown type"
             }
 
@@ -149,9 +164,46 @@ class VariableTypeWidget(project: Project) : EditorBasedWidget(project), StatusB
                 }
             }
 
+            // Handle complex expressions (e.g., call expressions, etc.)
+            is PyCallExpression -> {
+                val callee = expression.callee
+                if (callee is PyReferenceExpression) {
+                    // Check if it's a function call and handle accordingly
+                    val resolved = callee.reference.resolve()
+                    if (resolved is PyFunction) {
+                        return "function call"
+                    }
+                }
+                "Unknown type"
+            }
+
+            // Handle assignment statements
+            is PyAssignmentStatement -> {
+                val assignedValue = expression.assignedValue
+                if (assignedValue != null) {
+                    // Check if the assigned value is a tuple (e.g., a = (1, 2, 3))
+                    if (assignedValue is PyTupleExpression) {
+                        return "tuple"
+                    }
+                    // Check for more complex cases (e.g., tuple returned by function)
+                    return getTypeFromExpression(assignedValue)  // Handle other types recursively
+                }
+                "Unknown type"
+            }
+
+            // Handle parenthesized expressions (e.g., (a, b) in a function call or assignment)
+            is PyParenthesizedExpression -> {
+                // Access the contained expression correctly
+                val innerExpression = expression.containedExpression
+                return getTypeFromExpression(innerExpression ?: expression)  // Fall back to the full expression if null
+            }
+
             else -> "Unknown type"
         }
     }
+
+
+
 
     override fun dispose() {
         getEditor()?.caretModel?.removeCaretListener(caretListener)
