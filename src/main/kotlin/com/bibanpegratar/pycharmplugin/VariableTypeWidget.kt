@@ -202,9 +202,6 @@ class VariableTypeWidget(project: Project) : EditorBasedWidget(project), StatusB
         }
     }
 
-
-
-
     override fun dispose() {
         getEditor()?.caretModel?.removeCaretListener(caretListener)
     }
