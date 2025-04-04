@@ -50,3 +50,6 @@ This will launch a new PyCharm instance with your plugin activated.
 - **Kotlin**: For writing the plugin logic in Kotlin.
 - **PyCharm Plugin SDK**: The core SDK to build plugins for PyCharm.
 - **Python Plugin**: Required to use the Python features within the PyCharm IDE.
+
+## Known issues
+- Cannot yet detect a variable class declaration.
