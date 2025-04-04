@@ -13,6 +13,9 @@ import com.intellij.util.Consumer
 import com.jetbrains.python.psi.*
 import com.jetbrains.python.psi.types.TypeEvalContext
 import java.awt.event.MouseEvent
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
+import com.intellij.util.concurrency.AppExecutorUtil
 
 class VariableTypeWidget(project: Project) : EditorBasedWidget(project), StatusBarWidget.TextPresentation {
 
@@ -55,7 +58,7 @@ class VariableTypeWidget(project: Project) : EditorBasedWidget(project), StatusB
 
     private val caretListener = object : CaretListener {
         override fun caretPositionChanged(event: CaretEvent) {
-            // limit updates
+            // Limit updates
             val now = System.currentTimeMillis()
             if (now - lastUpdateTime > 100) { // update at most every 100ms
                 lastUpdateTime = now
@@ -65,69 +68,49 @@ class VariableTypeWidget(project: Project) : EditorBasedWidget(project), StatusB
     }
 
     private fun updateText() {
-        val editor: Editor? = getEditor()
-        if (editor == null) {
-            text = "No editor open"
-            myStatusBar?.updateWidget(ID())
-            return
-        }
+        ReadAction.nonBlocking<String> {
+            val editor: Editor = getEditor() ?: return@nonBlocking "No editor open"
 
-        val psiFile = com.intellij.psi.util.PsiUtilBase.getPsiFileInEditor(editor, project) ?: run {
-            text = "Not a Python file"
-            myStatusBar?.updateWidget(ID())
-            return
-        }
+            val psiFile = com.intellij.psi.util.PsiUtilBase.getPsiFileInEditor(editor, project)
+                ?: return@nonBlocking "Not a Python file"
 
-        if (!psiFile.language.`is`(com.jetbrains.python.PythonLanguage.getInstance())) {
-            text = "Not a Python file"
-            myStatusBar?.updateWidget(ID())
-            return
-        }
-
-        val offset = editor.caretModel.offset
-        val element = psiFile.findElementAt(offset) ?: run {
-            text = "No element at caret"
-            myStatusBar?.updateWidget(ID())
-            return
-        }
-
-        // 1. Check if the caret is on a variable REFERENCE
-        val refExpr = com.intellij.psi.util.PsiTreeUtil.getParentOfType(
-            element, PyReferenceExpression::class.java, false
-        )
-
-        if (refExpr != null) {
-            val type = TypeEvalContext.codeAnalysis(project, psiFile).getType(refExpr)
-            text = if (type != null) "${refExpr.name}: ${type.name}" else "${refExpr.name}: Unknown type"
-            myStatusBar?.updateWidget(ID())
-            return
-        }
-
-        // 2. If no reference found, check if the caret is on a variable DECLARATION (assignment target)
-        val targetExpr = com.intellij.psi.util.PsiTreeUtil.getParentOfType(
-            element, PyTargetExpression::class.java, false
-        )
-
-        if (targetExpr != null) {
-            val parent = targetExpr.parent
-            if (parent is PyAssignmentStatement) {
-                val assignedValue = parent.assignedValue
-                if (assignedValue != null) {
-                    text = "${targetExpr.name}: ${getTypeFromExpression(assignedValue)}"
-                } else {
-                    text = "${targetExpr.name}: Unknown type"
-                }
-            } else {
-                text = "${targetExpr.name}: Unknown type"
+            if (!psiFile.language.`is`(com.jetbrains.python.PythonLanguage.getInstance())) {
+                return@nonBlocking "Not a Python file"
             }
+
+            val offset = editor.caretModel.offset
+            val element = psiFile.findElementAt(offset) ?: return@nonBlocking "No element at caret"
+
+            val refExpr = com.intellij.psi.util.PsiTreeUtil.getParentOfType(
+                element, PyReferenceExpression::class.java, false
+            )
+
+            if (refExpr != null) {
+                val type = TypeEvalContext.codeAnalysis(project, psiFile).getType(refExpr)
+                return@nonBlocking if (type != null) "${refExpr.name}: ${type.name}" else "${refExpr.name}: Unknown type"
+            }
+
+            val targetExpr = com.intellij.psi.util.PsiTreeUtil.getParentOfType(
+                element, PyTargetExpression::class.java, false
+            )
+
+            if (targetExpr != null) {
+                val parent = targetExpr.parent
+                if (parent is PyAssignmentStatement) {
+                    val assignedValue = parent.assignedValue
+                    if (assignedValue != null) {
+                        return@nonBlocking "${targetExpr.name}: ${getTypeFromExpression(assignedValue)}"
+                    }
+                }
+                return@nonBlocking "${targetExpr.name}: Unknown type"
+            }
+
+            return@nonBlocking "No variable at caret"
+        }.finishOnUiThread(ApplicationManager.getApplication().defaultModalityState) { resultText ->
+            text = resultText
             myStatusBar?.updateWidget(ID())
-            return
-        }
-
-        text = "No variable at caret"
-        myStatusBar?.updateWidget(ID())
+        }.submit(AppExecutorUtil.getAppExecutorService())
     }
-
 
     private fun getTypeFromExpression(expression: PyExpression): String {
         return when (expression) {
@@ -154,7 +137,6 @@ class VariableTypeWidget(project: Project) : EditorBasedWidget(project), StatusB
             is PyBinaryExpression -> {
                 val leftType = getTypeFromExpression(expression.leftExpression)
                 val rightType = expression.rightExpression?.let { getTypeFromExpression(it) }
-
                 val operator = expression.psiOperator?.text ?: return "Unknown type"
 
                 return when (operator) {
@@ -170,8 +152,6 @@ class VariableTypeWidget(project: Project) : EditorBasedWidget(project), StatusB
             else -> "Unknown type"
         }
     }
-
-
 
     override fun dispose() {
         getEditor()?.caretModel?.removeCaretListener(caretListener)
