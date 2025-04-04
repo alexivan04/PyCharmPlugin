@@ -81,15 +81,18 @@ class VariableTypeWidget(project: Project) : EditorBasedWidget(project), StatusB
             val offset = editor.caretModel.offset
             val element = psiFile.findElementAt(offset) ?: return@nonBlocking "No element at caret"
 
+            // Check if the element is a variable
             val refExpr = com.intellij.psi.util.PsiTreeUtil.getParentOfType(
                 element, PyReferenceExpression::class.java, false
             )
 
+            // Check if the element is a variable reference
             if (refExpr != null) {
                 val type = TypeEvalContext.codeAnalysis(project, psiFile).getType(refExpr)
                 return@nonBlocking if (type != null) "${refExpr.name}: ${type.name}" else "${refExpr.name}: Unknown type"
             }
 
+            // Check if the element is a variable assignment
             val targetExpr = com.intellij.psi.util.PsiTreeUtil.getParentOfType(
                 element, PyTargetExpression::class.java, false
             )
@@ -112,6 +115,7 @@ class VariableTypeWidget(project: Project) : EditorBasedWidget(project), StatusB
         }.submit(AppExecutorUtil.getAppExecutorService())
     }
 
+    // Detect the type of the expression
     private fun getTypeFromExpression(expression: PyExpression): String {
         return when (expression) {
             is PyStringLiteralExpression -> "str"
@@ -149,6 +153,7 @@ class VariableTypeWidget(project: Project) : EditorBasedWidget(project), StatusB
                 "Unknown type"
             }
 
+            // Handle binary expressions
             is PyBinaryExpression -> {
                 val leftType = getTypeFromExpression(expression.leftExpression)
                 val rightType = expression.rightExpression?.let { getTypeFromExpression(it) }
