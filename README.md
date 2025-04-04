@@ -19,9 +19,7 @@ Before using this plugin, ensure that you have the following installed:
 Once installed, the plugin will automatically show a widget on the **status bar** in PyCharm displaying the current data type of the selected variable in your code.
 
 ### Widget Behavior
-
-- **Hover**: Hover over any variable in the code, and the widget will show its current type.
-- **Click**: Clicking the widget provides a drop-down menu for advanced options, including variable manipulation and debugging.
+**Hover**: Hover over any variable in the code, and the widget will show its current type.
 
 ## Development
 
@@ -52,15 +50,3 @@ This will launch a new PyCharm instance with your plugin activated.
 - **Kotlin**: For writing the plugin logic in Kotlin.
 - **PyCharm Plugin SDK**: The core SDK to build plugins for PyCharm.
 - **Python Plugin**: Required to use the Python features within the PyCharm IDE.
-
-## Troubleshooting
-
-If you encounter issues where the plugin doesn’t appear or functions incorrectly:
-
-1. Ensure that the **Python Plugin** is installed and enabled in PyCharm.
-2. Check the **plugin logs** for any errors related to loading or dependencies.
-3. Clean and rebuild the plugin using `./gradlew clean build` to ensure all configurations are updated.
-
-## License
-
-Not specified yet. Built by me, Alexandru-Marian Ivan, as part of the JetBrains internship program application.
